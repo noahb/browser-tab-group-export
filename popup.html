@@ -4,7 +4,7 @@
   <title>Tab Group Transfer</title>
   <style>
     body {
-      width: 300px;
+      width: 350px;
       padding: 10px;
       font-family: Arial, sans-serif;
     }
@@ -20,6 +20,10 @@
     }
     button:hover {
       background-color: #3367d6;
+    }
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
     }
     #status {
       margin-top: 10px;
@@ -42,20 +46,95 @@
     h3 {
       margin-top: 5px;
     }
+    .group-list {
+      max-height: 200px;
+      overflow-y: auto;
+      margin: 10px 0;
+    }
+    .group-item {
+      padding: 5px;
+      margin-bottom: 5px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      display: flex;
+      align-items: center;
+    }
+    .group-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+      display: inline-block;
+    }
+    .tab-count {
+      color: #666;
+      font-size: 12px;
+      margin-left: 5px;
+    }
+    .checkbox-container {
+      margin-right: 8px;
+    }
+    .import-options {
+      margin: 10px 0;
+    }
+    .option-row {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+    }
+    .spacer {
+      flex-grow: 1;
+    }
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+    .group-selector {
+      margin: 10px 0;
+    }
   </style>
 </head>
 <body>
   <h2>Tab Group Transfer</h2>
   
-  <div class="section">
+  <div class="section" id="exportSection">
     <h3>Export Tab Groups</h3>
-    <button id="exportGroups">Export All Tab Groups</button>
+    <div id="export-group-list" class="group-list">
+      <div class="loading">Loading tab groups...</div>
+    </div>
+    <div class="option-row">
+      <button id="selectAllExport">Select All</button>
+      <div class="spacer"></div>
+      <button id="deselectAllExport">Deselect All</button>
+    </div>
+    <button id="exportSelectedGroups" disabled>Export Selected Groups</button>
   </div>
   
-  <div class="section">
+  <div class="section" id="importSection">
     <h3>Import Tab Groups</h3>
-    <button id="importGroups">Import Tab Groups</button>
+    <button id="selectImportFile">Select JSON File</button>
     <input type="file" id="fileInput" accept=".json">
+    
+    <div id="import-options" class="import-options" style="display: none;">
+      <div class="option-row">
+        <label for="collapseGroups">Collapse imported groups:</label>
+        <div class="spacer"></div>
+        <input type="checkbox" id="collapseGroups" checked>
+      </div>
+      
+      <div id="import-group-list" class="group-list">
+        <!-- Groups from the selected file will appear here -->
+      </div>
+      
+      <div class="option-row">
+        <button id="selectAllImport">Select All</button>
+        <div class="spacer"></div>
+        <button id="deselectAllImport">Deselect All</button>
+      </div>
+      
+      <button id="importSelectedGroups">Import Selected Groups</button>
+    </div>
   </div>
   
   <div id="status"></div>
