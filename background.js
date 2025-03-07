@@ -1,6 +1,15 @@
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  if (request.action === 'exportTabGroups') {
-    exportTabGroups()
+  if (request.action === 'getTabGroups') {
+    getTabGroups()
+      .then(groups => {
+        sendResponse({ success: true, groups });
+      })
+      .catch(error => {
+        sendResponse({ success: false, error: error.message });
+      });
+    return true; // Indicates async response
+  } else if (request.action === 'exportTabGroups') {
+    exportTabGroups(request.groupIds)
       .then(data => {
         sendResponse({ success: true });
       })
@@ -9,7 +18,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       });
     return true; // Indicates async response
   } else if (request.action === 'importTabGroups') {
-    importTabGroups(request.tabGroups)
+    importTabGroups(request.tabGroups, request.collapsed)
       .then(() => {
         sendResponse({ success: true });
       })
@@ -20,7 +29,41 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   }
 });
 
-async function exportTabGroups() {
+async function getTabGroups() {
+  try {
+    // Get all windows
+    const windows = await chrome.windows.getAll();
+    let allGroups = [];
+    
+    for (const window of windows) {
+      // Get all tabs in the window
+      const tabs = await chrome.tabs.query({ windowId: window.id });
+      
+      // Get all tab groups in the window
+      const groups = await chrome.tabGroups.query({ windowId: window.id });
+      
+      // Add tab count to each group
+      for (const group of groups) {
+        const groupTabs = tabs.filter(tab => tab.groupId === group.id);
+        allGroups.push({
+          id: group.id,
+          title: group.title || '',
+          color: group.color || 'grey',
+          windowId: window.id,
+          tabCount: groupTabs.length,
+          collapsed: group.collapsed
+        });
+      }
+    }
+    
+    return allGroups;
+  } catch (error) {
+    console.error('Error getting tab groups:', error);
+    throw error;
+  }
+}
+
+async function exportTabGroups(groupIds) {
   try {
     // Get all windows
     const windows = await chrome.windows.getAll({ populate: true });
@@ -33,14 +76,18 @@ async function exportTabGroups() {
       // Get all tab groups in the window
       const groups = await chrome.tabGroups.query({ windowId: window.id });
       
+      // Filter groups by selected IDs if provided
+      const filteredGroups = groupIds ? groups.filter(group => groupIds.includes(group.id)) : groups;
+      
       // Map tabs to their groups
-      for (const group of groups) {
+      for (const group of filteredGroups) {
         const groupTabs = tabs.filter(tab => tab.groupId === group.id);
         
         if (groupTabs.length > 0) {
           tabGroupsData.push({
             title: group.title || '',
             color: group.color || 'grey',
+            collapsed: group.collapsed,
             tabs: groupTabs.map(tab => ({
               url: tab.url,
               title: tab.title,
@@ -59,7 +106,7 @@ async function exportTabGroups() {
     const date = new Date();
     const fileName = `tab-groups-${date.toISOString().split('T')[0]}.json`;
     
-    // Create a data URL instead of using URL.createObjectURL
+    // Create a data URL
     const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonString);
     
     // Download the file
@@ -76,7 +123,7 @@ async function exportTabGroups() {
   }
 }
 
-async function importTabGroups(tabGroupsData) {
+async function importTabGroups(tabGroupsData, collapsed = false) {
   if (!Array.isArray(tabGroupsData) || tabGroupsData.length === 0) {
     throw new Error('Invalid tab groups data');
   }
@@ -107,7 +154,8 @@ async function importTabGroups(tabGroupsData) {
         // Update the group properties
         await chrome.tabGroups.update(groupId, {
           title: groupData.title,
-          color: groupData.color
+          color: groupData.color,
+          collapsed: collapsed || groupData.collapsed || false
         });
       }
     }
