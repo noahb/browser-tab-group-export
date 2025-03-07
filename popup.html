@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tab Group Transfer</title>
+  <style>
+    body {
+      width: 300px;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+    }
+    button {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #3367d6;
+    }
+    #status {
+      margin-top: 10px;
+      color: #4caf50;
+      font-weight: bold;
+    }
+    #error {
+      margin-top: 10px;
+      color: #f44336;
+      font-weight: bold;
+    }
+    #fileInput {
+      display: none;
+    }
+    .section {
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    h3 {
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Tab Group Transfer</h2>
+  
+  <div class="section">
+    <h3>Export Tab Groups</h3>
+    <button id="exportGroups">Export All Tab Groups</button>
+  </div>
+  
+  <div class="section">
+    <h3>Import Tab Groups</h3>
+    <button id="importGroups">Import Tab Groups</button>
+    <input type="file" id="fileInput" accept=".json">
+  </div>
+  
+  <div id="status"></div>
+  <div id="error"></div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
